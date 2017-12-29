@@ -5,6 +5,7 @@
   document.querySelector('#tetris-container').appendChild(app.view);
 
   class Tetris {
+
     constructor(app) {
       this.graphics = new PIXI.Graphics();
       this.activeTetorimino = null;
@@ -31,8 +32,52 @@
       }
     }
 
-    getApp() {
-      return this.app;
+
+    get typePatterns() {
+      return [
+        [
+          [0, 0, 0, 0],
+          [0, 1, 0, 0],
+          [0, 1, 1, 1],
+          [0, 0, 0, 0],
+        ],
+        [
+          [0, 0, 0, 0],
+          [0, 0, 1, 0],
+          [1, 1, 1, 0],
+          [0, 0, 0, 0],
+        ],
+        [
+          [0, 1, 0, 0],
+          [0, 1, 0, 0],
+          [0, 1, 0, 0],
+          [0, 1, 0, 0],
+        ],
+        [
+          [0, 0, 0, 0],
+          [0, 1, 0, 0],
+          [1, 1, 1, 0],
+          [0, 0, 0, 0],
+        ],
+        [
+          [0, 0, 0, 0],
+          [0, 1, 1, 0],
+          [1, 1, 0, 0],
+          [0, 0, 0, 0],
+        ],
+        [
+          [0, 0, 0, 0],
+          [1, 1, 0, 0],
+          [0, 1, 1, 0],
+          [0, 0, 0, 0],
+        ],
+        [
+          [0, 0, 0, 0],
+          [0, 1, 1, 0],
+          [0, 1, 1, 0],
+          [0, 0, 0, 0],
+        ]
+      ];
     }
 
     start(){
@@ -43,6 +88,19 @@
       this.mainLoop();
     }
 
+    mainLoop() {
+      this.moveDownActiveTeterimino();
+      this.deleteLines();
+      this.placeActiveTetrimino();
+      setTimeout(this.mainLoop.bind(this), this.tickInterval);
+    }
+
+    moveDownActiveTeterimino() {
+      if(this.activeTetorimino) {
+        this.activeTetorimino.moveDown();
+      }
+    }
+    
     getTextStyle() {
       return new PIXI.TextStyle({
         fontFamily: 'Arial',
@@ -95,13 +153,6 @@
       }
     }
 
-    mainLoop() {
-      this.moveDownActiveTeterimino();
-      this.deleteLines();
-      this.placeActiveTetrimino();
-      setTimeout(this.mainLoop.bind(this), this.tickInterval);
-    }
-
     deleteLines() {
       const newPlacedBlocks = [];
       const blanckRows = [];
@@ -136,11 +187,6 @@
       this.updateDeleteLineText();
     }
 
-    moveDownActiveTeterimino() {
-      if(this.activeTetorimino) {
-        this.activeTetorimino.moveDown();
-      }
-    }
 
     placeActiveTetrimino() {
       const tetrimino = this.activeTetorimino;
@@ -267,52 +313,10 @@
       );
     }
 
-    get typePatterns() {
-      return [
-        [
-          [0, 0, 0, 0],
-          [0, 1, 0, 0],
-          [0, 1, 1, 1],
-          [0, 0, 0, 0],
-        ],
-        [
-          [0, 0, 0, 0],
-          [0, 0, 1, 0],
-          [1, 1, 1, 0],
-          [0, 0, 0, 0],
-        ],
-        [
-          [0, 1, 0, 0],
-          [0, 1, 0, 0],
-          [0, 1, 0, 0],
-          [0, 1, 0, 0],
-        ],
-        [
-          [0, 0, 0, 0],
-          [0, 1, 0, 0],
-          [1, 1, 1, 0],
-          [0, 0, 0, 0],
-        ],
-        [
-          [0, 0, 0, 0],
-          [0, 1, 1, 0],
-          [1, 1, 0, 0],
-          [0, 0, 0, 0],
-        ],
-        [
-          [0, 0, 0, 0],
-          [1, 1, 0, 0],
-          [0, 1, 1, 0],
-          [0, 0, 0, 0],
-        ],
-        [
-          [0, 0, 0, 0],
-          [0, 1, 1, 0],
-          [0, 1, 1, 0],
-          [0, 0, 0, 0],
-        ]
-      ];
+    getApp() {
+      return this.app;
     }
+
   }
 
   class Tetorimino {
