@@ -17,6 +17,8 @@
       this.rowNum = 20;
       this.tickInterval = 1000;
       this.deletedLineCount = 0;
+      this.deletedLineText = null;
+      this.helpText = null;
 
       for (let j = 0; j < this.rowNum; j++) {
         const col = [];
@@ -33,9 +35,43 @@
 
     start(){
       this.createField();
+      this.createTextArea();
       this.addActiveTetrimino();
       this.addListener();
       this.mainLoop();
+    }
+
+    getTextStyle() {
+      return new PIXI.TextStyle({
+        fontFamily: 'Arial',
+        fontSize: 12,
+        fill: ['#ffffff', '#00ff99'], // gradient
+        stroke: '#4a1850',
+        strokeThickness: 1,
+        dropShadow: true,
+        dropShadowColor: '#000000',
+        dropShadowBlur: 1,
+        dropShadowAngle: Math.PI / 6,
+        dropShadowDistance: 1,
+        wordWrap: true,
+        wordWrapWidth: 90
+      });
+    }
+
+    createTextArea() {
+      this.deletedLineText = new PIXI.Text(`Deleted line : ${this.deletedLineCount}`, this.getTextStyle());
+      this.deletedLineText.x = 290;
+      this.deletedLineText.y = 60;
+      app.stage.addChild(this.deletedLineText);
+
+      this.helpText = new PIXI.Text('→ : Right\n← : Left\n↓ : Down\nSpace : Rotate', this.getTextStyle());
+      this.helpText.x = 290;
+      this.helpText.y = 80;
+      app.stage.addChild(this.helpText);
+    }
+
+    updateDeleteLineText() {
+      this.deletedLineText.setText(`Deleted line : ${this.deletedLineCount}`);
     }
 
     drawPlacedBlocks() {
@@ -95,6 +131,7 @@
 
       this.placedBlocks = blanckRows.concat(newPlacedBlocks);
       this.drawPlacedBlocks(); // Draw all
+      this.updateDeleteLineText();
     }
 
     moveDownActiveTeterimino() {
