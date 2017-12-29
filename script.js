@@ -16,6 +16,8 @@
       this.columnNum = 10;
       this.rowNum = 20;
       this.tickInterval = 1000;
+      this.startX = 3;
+      this.startY = -2;
       this.deletedLineCount = 0;
       this.deletedLineText = null;
       this.helpText = null;
@@ -96,7 +98,7 @@
     mainLoop() {
       this.moveDownActiveTeterimino();
       this.deleteLines();
-      this.addNextActiveTetrimino();
+      this.placeActiveTetrimino();
       setTimeout(this.mainLoop.bind(this), this.tickInterval);
     }
 
@@ -140,15 +142,17 @@
       }
     }
 
-    addNextActiveTetrimino() {
+    placeActiveTetrimino() {
       const tetrimino = this.activeTetorimino;
-      if(!tetrimino.isMovable()) {
+      if(tetrimino && !tetrimino.isMovable()) {
         const x = tetrimino.getX();
         const y = tetrimino.getY();
         const pattern = tetrimino.getPattern();
         for (let i = 0; i < 4; i++) {
           for (let j = 0; j < 4; j++) {
-            if (pattern[j][i]) {
+            if (pattern[j][i] &&
+              (j + y) >= 0 &&
+              (i + x) >= 0) {
               this.placedBlocks[j + y][i + x] = new PlacedBlock(tetrimino);
             }
           }
@@ -188,9 +192,52 @@
 
     addActiveTetrimino() {
       const type = Math.floor(Math.random() * this.typePatterns.length);
-      const tetrimino = new Tetorimino(type, 3, -2, this);
+      const tetrimino = new Tetorimino(type, this.startX, this.startY, this);
       tetrimino.draw();
-      this.activeTetorimino = tetrimino;
+      if (!this.isGameOver(tetrimino)) {
+        this.activeTetorimino = tetrimino;
+      } else {
+        this.activeTetorimino = null;
+        const gameOverText = new PIXI.Text(`Game Over\nScore : ${this.deletedLineCount}`,
+         this.getGemeOverTextStyle());
+        gameOverText.x = 90;
+        gameOverText.y = 200;
+        this.getApp().stage.addChild(gameOverText);
+      }
+    }
+
+    isGameOver(tetrimino) {
+      const pattern = tetrimino.getPattern();
+      let isGameOver = false;
+      for (let i = 0; i < 4; i++) {
+        for (let j = 0; j < 4; j++) {
+          if(pattern[j][i]) {
+            const nextX = this.startX + i; 
+            const nextY = this.startY + j;
+            if(this.exists(nextX, nextY)) {
+              isGameOver = true;
+            }
+          }
+        }
+      }
+      return isGameOver;
+    }
+
+    getGemeOverTextStyle() {
+      return new PIXI.TextStyle({
+        fontFamily: 'Arial',
+        fontSize: 40,
+        fill: ['#ffffff', '#ff0000'], // gradient
+        stroke: '#4a1850',
+        strokeThickness: 1,
+        dropShadow: true,
+        dropShadowColor: '#000000',
+        dropShadowBlur: 1,
+        dropShadowAngle: Math.PI / 6,
+        dropShadowDistance: 1,
+        wordWrap: true,
+        wordWrapWidth: 300
+      });
     }
 
     exists(x, y) {
