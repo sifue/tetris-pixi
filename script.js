@@ -8,7 +8,7 @@
     constructor(app) {
       this.graphics = new PIXI.Graphics();
       this.activeTetorimino = null;
-      this.placedTetoriminos = [];
+      this.placedBlocks = [];
       this.app = app;
       this.fieldX = 20;
       this.fieldY = 50;
@@ -16,6 +16,14 @@
       this.columnNum = 10;
       this.rowNum = 20;
       this.tickInterval = 1000;
+
+      for (let j = 0; j < this.rowNum; j++) {
+        const col = [];
+        for (let i = 0; i < this.columnNum; i++) {
+          col.push(null);
+        }
+        this.placedBlocks.push(col);
+      }
     }
 
     getApp() {
@@ -29,8 +37,28 @@
       this.mainLoop();
     }
 
+    drawPlacedBlocks() {
+      for (let i = 0; i < this.columnNum; i++) {
+        for (let j = 0; j < this.rowNum; j++) {
+          if(this.placedBlocks[j][i]) {
+            const placedBlock = this.placedBlocks[j][i];
+            const graphics = placedBlock.getGraphics();
+            graphics.lineStyle(1, 0x3D0031, 1);
+            graphics.beginFill(0x2F1557, 1);
+            graphics.drawRect(
+              this.fieldX + (i * this.blockSize),
+              this.fieldY + (j * this.blockSize),
+              this.blockSize,
+              this.blockSize);
+            this.graphics.endFill();
+          }
+        }
+      }
+    }
+
     mainLoop() {
       this.moveDownActiveTeterimino();
+      this.drawPlacedBlocks();
       this.deleteLines();
       this.addNextActiveTetrimino();
       setTimeout(this.mainLoop.bind(this), this.tickInterval);
@@ -47,8 +75,19 @@
     }
 
     addNextActiveTetrimino() {
-      if(!this.activeTetorimino.isMovable()) {
-        this.placedTetoriminos.push(this.activeTetorimino);
+      const tetrimino = this.activeTetorimino;
+      if(!tetrimino.isMovable()) {
+        const x = tetrimino.getX();
+        const y = tetrimino.getY();
+        const pattern = tetrimino.getPattern();
+        for (let i = 0; i < 4; i++) {
+          for (let j = 0; j < 4; j++) {
+            if (pattern[j][i]) {
+              this.placedBlocks[j + y][i + x] = new PlacedBlock(tetrimino);
+            }
+          }
+        }
+        this.drawPlacedBlocks();
         this.addActiveTetrimino();
       }
     }
@@ -88,23 +127,12 @@
     }
 
     exists(x, y) {
-      if(x < 0) {return true;}
-      if(x >= 10) {return true;}
-      if(y >= 20) {return true;}
-
-      for(let tetrimino of this.placedTetoriminos) {
-        const pattern = tetrimino.getPattern();
-        for (let i = 0; i < 4; i++) {
-          for (let j = 0; j < 4; j++) {
-            if (pattern[j][i]) {
-              if(tetrimino.getX() + i === x && tetrimino.getY() + j === y) {
-                return true;
-              }
-            }
-          }
-        }
-      }
-
+      if(x < 0) return true;
+      if(x >= this.columnNum) return true;
+      if(y >= this.rowNum) return true;
+      if(x >= 0 && x < this.columnNum &&
+         y >= 0 && y < this.rowNum &&
+        this.placedBlocks[y][x]) return true;
       return false;
     }
 
@@ -301,6 +329,25 @@
       return this.y;
     }
 
+    clear() {
+      this.graphics.clear();
+    }
+
+    getApp() {
+      return this.tetoris.getApp();
+    }
+  }
+
+  class PlacedBlock {
+    constructor(tetorimino){
+      this.tetorimino = tetorimino;
+      this.graphics = new PIXI.Graphics();
+      this.tetorimino.getApp().stage.addChild(this.graphics);
+    }
+
+    getGraphics() {
+      return this.graphics;
+    }
   }
 
   new Tetris(app).start();
