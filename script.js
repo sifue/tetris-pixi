@@ -16,6 +16,7 @@
       this.columnNum = 10;
       this.rowNum = 20;
       this.tickInterval = 1000;
+      this.deletedLineCount = 0;
 
       for (let j = 0; j < this.rowNum; j++) {
         const col = [];
@@ -58,14 +59,42 @@
 
     mainLoop() {
       this.moveDownActiveTeterimino();
-      this.drawPlacedBlocks();
       this.deleteLines();
       this.addNextActiveTetrimino();
       setTimeout(this.mainLoop.bind(this), this.tickInterval);
     }
 
     deleteLines() {
-      // TODO
+      const newPlacedBlocks = [];
+      const blanckRows = [];
+
+      for (let j = 0; j < this.rowNum; j++) {
+        let isAllExists = true;
+        for (let i = 0; i < this.columnNum; i++) {
+          if(!this.placedBlocks[j][i]) {
+            isAllExists = false;
+          } else {
+            // All Clear
+            this.placedBlocks[j][i].clear();
+          }
+        }
+
+        if(!isAllExists) {
+          newPlacedBlocks.push(this.placedBlocks[j]);
+        } else {
+
+          const brankRow = [];
+          for (let i = 0; i < this.columnNum; i++) {
+            brankRow.push(null);
+          }
+          blanckRows.push(brankRow);
+
+          this.deletedLineCount++;
+        }
+      }
+
+      this.placedBlocks = blanckRows.concat(newPlacedBlocks);
+      this.drawPlacedBlocks(); // Draw all
     }
 
     moveDownActiveTeterimino() {
@@ -87,6 +116,7 @@
             }
           }
         }
+        tetrimino.clear();
         this.drawPlacedBlocks();
         this.addActiveTetrimino();
       }
@@ -347,6 +377,10 @@
 
     getGraphics() {
       return this.graphics;
+    }
+
+    clear() {
+      this.graphics.clear();
     }
   }
 
