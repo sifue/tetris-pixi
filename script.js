@@ -8,13 +8,14 @@
     constructor(app) {
       this.graphics = new PIXI.Graphics();
       this.activeTetorimino = null;
-      this.tetoriminos = [];
+      this.placedTetoriminos = [];
       this.app = app;
       this.fieldX = 20;
       this.fieldY = 50;
       this.blockSize = 25;
       this.columnNum = 10;
       this.rowNum = 20;
+      this.tickInterval = 1000;
     }
 
     getApp() {
@@ -23,9 +24,33 @@
 
     start(){
       this.createField();
-      this.addTetrimino();
+      this.addActiveTetrimino();
       this.addListener();
-      
+      this.mainLoop();
+    }
+
+    mainLoop() {
+      this.moveDownActiveTeterimino();
+      this.deleteLines();
+      this.addNextActiveTetrimino();
+      setTimeout(this.mainLoop.bind(this), this.tickInterval);
+    }
+
+    deleteLines() {
+      // TODO
+    }
+
+    moveDownActiveTeterimino() {
+      if(this.activeTetorimino) {
+        this.activeTetorimino.moveDown();
+      }
+    }
+
+    addNextActiveTetrimino() {
+      if(!this.activeTetorimino.isMovable()) {
+        this.placedTetoriminos.push(this.activeTetorimino);
+        this.addActiveTetrimino();
+      }
     }
 
     createField() {
@@ -39,7 +64,7 @@
         this.blockSize * this.rowNum);
       this.graphics.endFill();
 
-      // all positinon
+      // All positinon
       for (let i = 0; i < this.columnNum; i++) {
         for (let j = 0; j < this.rowNum; j++) {
           this.graphics.lineStyle(1, 0x2C4E00, 1);
@@ -55,19 +80,31 @@
       this.app.stage.addChild(this.graphics);
     }
 
-    addTetrimino() {
-      let tetrimino = new Tetorimino(0, 3, -1, this);
+    addActiveTetrimino() {
+      const type = Math.floor(Math.random() * this.typePatterns.length);
+      const tetrimino = new Tetorimino(type, 3, -2, this);
       tetrimino.draw();
       this.activeTetorimino = tetrimino;
-      this.tetoriminos.push(tetrimino);
     }
 
     exists(x, y) {
       if(x < 0) {return true;}
-      if(y < 0) {return true;}
       if(x >= 10) {return true;}
       if(y >= 20) {return true;}
-      // TODO 全ブロックがあるかどうか調べる
+
+      for(let tetrimino of this.placedTetoriminos) {
+        const pattern = tetrimino.getPattern();
+        for (let i = 0; i < 4; i++) {
+          for (let j = 0; j < 4; j++) {
+            if (pattern[j][i]) {
+              if(tetrimino.getX() + i === x && tetrimino.getY() + j === y) {
+                return true;
+              }
+            }
+          }
+        }
+      }
+
       return false;
     }
 
@@ -81,19 +118,49 @@
             if(this.activeTetorimino) this.activeTetorimino.moveRight();
           } else if (event.keyCode === 40) {
             if(this.activeTetorimino) this.activeTetorimino.moveDown();
+          } else if (event.keyCode === 32) {
+            if(this.activeTetorimino) this.activeTetorimino.rotateRight();
           }
         }
       );
     }
-  }
 
-  class Tetorimino {
-    constructor(type, x, y, tetoris) {
-      this.typePatterns = [
+    get typePatterns() {
+      return [
         [
           [0, 0, 0, 0],
           [0, 1, 0, 0],
           [0, 1, 1, 1],
+          [0, 0, 0, 0],
+        ],
+        [
+          [0, 0, 0, 0],
+          [0, 0, 1, 0],
+          [1, 1, 1, 0],
+          [0, 0, 0, 0],
+        ],
+        [
+          [0, 1, 0, 0],
+          [0, 1, 0, 0],
+          [0, 1, 0, 0],
+          [0, 1, 0, 0],
+        ],
+        [
+          [0, 0, 0, 0],
+          [0, 1, 0, 0],
+          [1, 1, 1, 0],
+          [0, 0, 0, 0],
+        ],
+        [
+          [0, 0, 0, 0],
+          [0, 1, 1, 0],
+          [1, 1, 0, 0],
+          [0, 0, 0, 0],
+        ],
+        [
+          [0, 0, 0, 0],
+          [1, 1, 0, 0],
+          [0, 1, 1, 0],
           [0, 0, 0, 0],
         ],
         [
@@ -103,13 +170,28 @@
           [0, 0, 0, 0],
         ]
       ];
+    }
+  }
+
+  class Tetorimino {
+    constructor(type, x, y, tetoris) {
+      this.typePatterns = tetoris.typePatterns;
       this.type = type;
-      this.pattern = this.typePatterns[type].concat();
+      this.pattern = this.deepCopy(this.typePatterns[type]);
       this.x = x;
       this.y = y;
       this.tetoris = tetoris;
       this.graphics = new PIXI.Graphics();
       this.tetoris.getApp().stage.addChild(this.graphics);
+      this.movable = true;
+    }
+
+    deepCopy(original) {
+      const copied = [];
+      for(let row of original) {
+        copied.push([].concat(row));
+      }
+      return copied;
     }
  
     draw(){
@@ -132,6 +214,16 @@
           }
         }
       }
+    }
+     
+    rotateRight() {
+      const oriPattern = this.deepCopy(this.pattern);
+      for (let i = 0; i < 4; i++) {
+        for (let j = 0; j < 4; j++) {
+          this.pattern[i][3-j] = oriPattern[j][i];
+        }
+      }
+      this.draw();
     }
 
     moveLeft() {
@@ -188,7 +280,25 @@
       if (!isCollision) {
         this.y++;
         this.draw();
+      } else {
+        this.movable = false;
       }
+    }
+
+    isMovable() {
+      return this.movable;
+    }
+
+    getPattern() {
+      return this.pattern;
+    }
+
+    getX() {
+      return this.x;
+    }
+
+    getY() {
+      return this.y;
     }
 
   }
