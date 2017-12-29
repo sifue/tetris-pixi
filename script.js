@@ -15,7 +15,7 @@
       this.blockSize = 25;
       this.columnNum = 10;
       this.rowNum = 20;
-      this.tickInterval = 1000;
+      this.tickInterval = 500; // msec
       this.startX = 3;
       this.startY = -2;
       this.deletedLineCount = 0;
