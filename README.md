@@ -11,5 +11,8 @@
 - 左右下に動かせる
 - バグ: テトリミノを変なところで回転させると壁に埋まる
 
+### Icon
+https://www.flaticon.com/free-icon/like_148836
+
 ### LICENSE
 ISC license
