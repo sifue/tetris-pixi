@@ -1,7 +1,8 @@
 (function () {
-  const app = new PIXI.Application(400, 600, { 
-    antialias: true, 
-    backgroundColor: 0x6E9B34});
+  const app = new PIXI.Application(400, 600, {
+    antialias: true,
+    backgroundColor: 0x6E9B34
+  });
   document.querySelector('#tetris-container').appendChild(app.view);
 
   class Tetris {
@@ -80,7 +81,7 @@
       ];
     }
 
-    start(){
+    start() {
       this.createField();
       this.createTextArea();
       this.addActiveTetrimino();
@@ -96,11 +97,11 @@
     }
 
     moveDownActiveTeterimino() {
-      if(this.activeTetorimino) {
+      if (this.activeTetorimino) {
         this.activeTetorimino.moveDown();
       }
     }
-    
+
     getTextStyle() {
       return new PIXI.TextStyle({
         fontFamily: 'Arial',
@@ -124,7 +125,7 @@
       this.deletedLineText.y = 60;
       app.stage.addChild(this.deletedLineText);
 
-      this.helpText = new PIXI.Text('→ : Right\n← : Left\n↓ : Down\nSpace : Rotate', this.getTextStyle());
+      this.helpText = new PIXI.Text('→ : Right\n← : Left\n↓ : Down\nSpace or Tap :\n Rotate', this.getTextStyle());
       this.helpText.x = 290;
       this.helpText.y = 80;
       app.stage.addChild(this.helpText);
@@ -137,7 +138,7 @@
     drawPlacedBlocks() {
       for (let i = 0; i < this.columnNum; i++) {
         for (let j = 0; j < this.rowNum; j++) {
-          if(this.placedBlocks[j][i]) {
+          if (this.placedBlocks[j][i]) {
             const placedBlock = this.placedBlocks[j][i];
             const graphics = placedBlock.getGraphics();
             graphics.lineStyle(1, 0x3D0031, 1);
@@ -160,7 +161,7 @@
       for (let j = 0; j < this.rowNum; j++) {
         let isAllExists = true;
         for (let i = 0; i < this.columnNum; i++) {
-          if(!this.placedBlocks[j][i]) {
+          if (!this.placedBlocks[j][i]) {
             isAllExists = false;
           } else {
             // All Clear
@@ -168,7 +169,7 @@
           }
         }
 
-        if(!isAllExists) {
+        if (!isAllExists) {
           newPlacedBlocks.push(this.placedBlocks[j]);
         } else {
 
@@ -190,7 +191,7 @@
 
     placeActiveTetrimino() {
       const tetrimino = this.activeTetorimino;
-      if(tetrimino && !tetrimino.isMovable()) {
+      if (tetrimino && !tetrimino.isMovable()) {
         const x = tetrimino.getX();
         const y = tetrimino.getY();
         const pattern = tetrimino.getPattern();
@@ -214,7 +215,7 @@
       this.graphics.lineStyle(1, 0x2C4E00, 1);
       this.graphics.beginFill(0xA47413, 1);
       this.graphics.drawRect(
-        this.fieldX, 
+        this.fieldX,
         this.fieldY,
         this.blockSize * this.columnNum,
         this.blockSize * this.rowNum);
@@ -245,7 +246,7 @@
       } else {
         this.activeTetorimino = null;
         const gameOverText = new PIXI.Text(`Game Over\nScore : ${this.deletedLineCount}`,
-         this.getGemeOverTextStyle());
+          this.getGemeOverTextStyle());
         gameOverText.x = 90;
         gameOverText.y = 200;
         this.getApp().stage.addChild(gameOverText);
@@ -257,10 +258,10 @@
       let isGameOver = false;
       for (let i = 0; i < 4; i++) {
         for (let j = 0; j < 4; j++) {
-          if(pattern[j][i]) {
-            const nextX = this.startX + i; 
+          if (pattern[j][i]) {
+            const nextX = this.startX + i;
             const nextY = this.startY + j;
-            if(this.exists(nextX, nextY)) {
+            if (this.exists(nextX, nextY)) {
               isGameOver = true;
             }
           }
@@ -287,30 +288,55 @@
     }
 
     exists(x, y) {
-      if(x < 0) return true;
-      if(x >= this.columnNum) return true;
-      if(y >= this.rowNum) return true;
-      if(x >= 0 && x < this.columnNum &&
-         y >= 0 && y < this.rowNum &&
+      if (x < 0) return true;
+      if (x >= this.columnNum) return true;
+      if (y >= this.rowNum) return true;
+      if (x >= 0 && x < this.columnNum &&
+        y >= 0 && y < this.rowNum &&
         this.placedBlocks[y][x]) return true;
       return false;
     }
 
-    addListener(){
+    addListener() {
       window.addEventListener(
         'keydown',
         (event) => {
           if (event.keyCode === 37) {
-            if(this.activeTetorimino) this.activeTetorimino.moveLeft();
+            if (this.activeTetorimino) this.activeTetorimino.moveLeft();
           } else if (event.keyCode === 39) {
-            if(this.activeTetorimino) this.activeTetorimino.moveRight();
+            if (this.activeTetorimino) this.activeTetorimino.moveRight();
           } else if (event.keyCode === 40) {
-            if(this.activeTetorimino) this.activeTetorimino.moveDown();
+            if (this.activeTetorimino) this.activeTetorimino.moveDown();
           } else if (event.keyCode === 32) {
-            if(this.activeTetorimino) this.activeTetorimino.rotateRight();
+            if (this.activeTetorimino) this.activeTetorimino.rotateRight();
           }
         }
       );
+
+      // Smartphone
+      const containerElement = document.querySelector('#tetris-container');
+      const activeRegion = ZingTouch.Region(containerElement);
+
+      new ZingTouch.Swipe({
+        numInputs: 1,
+        escapeVelocity: 0.25,
+        maxRestTime: 10
+      });
+
+      activeRegion.bind(containerElement, 'swipe', (event) => {
+        const d = event.detail.data[0].currentDirection;
+        if ((0 <= d && d < 45) || (315 <= d && d < 360)) {
+          if (this.activeTetorimino) this.activeTetorimino.moveRight();
+        } else if ((135 <= d && d < 225)) {
+          if (this.activeTetorimino) this.activeTetorimino.moveLeft();
+        } else if ((135 <= d && d < 225)) {
+          if (this.activeTetorimino) this.activeTetorimino.moveDown();
+        }
+      });
+
+      activeRegion.bind(containerElement, 'tap', (event) => {
+        if (this.activeTetorimino) this.activeTetorimino.rotateRight();
+      });
     }
 
     getApp() {
@@ -334,21 +360,21 @@
 
     deepCopy(original) {
       const copied = [];
-      for(let row of original) {
+      for (let row of original) {
         copied.push([].concat(row));
       }
       return copied;
     }
- 
-    draw(){
-      if(this.graphics) {
+
+    draw() {
+      if (this.graphics) {
         this.graphics.clear();
       }
 
       const tetoris = this.tetoris;
       for (let i = 0; i < 4; i++) {
         for (let j = 0; j < 4; j++) {
-          if(this.pattern[j][i]) {
+          if (this.pattern[j][i]) {
             this.graphics.lineStyle(1, 0x3D0031, 1);
             this.graphics.beginFill(0x5B0F4D, 1);
             this.graphics.drawRect(
@@ -356,17 +382,17 @@
               tetoris.fieldY + ((j + this.y) * tetoris.blockSize),
               tetoris.blockSize,
               tetoris.blockSize);
-              this.graphics.endFill();
+            this.graphics.endFill();
           }
         }
       }
     }
-     
+
     rotateRight() {
       const oriPattern = this.deepCopy(this.pattern);
       for (let i = 0; i < 4; i++) {
         for (let j = 0; j < 4; j++) {
-          this.pattern[i][3-j] = oriPattern[j][i];
+          this.pattern[i][3 - j] = oriPattern[j][i];
         }
       }
       this.draw();
@@ -376,16 +402,16 @@
       let isCollision = false;
       for (let i = 0; i < 4; i++) {
         for (let j = 0; j < 4; j++) {
-          if(this.pattern[j][i]) {
-            const nextX = this.x - 1 + i; 
+          if (this.pattern[j][i]) {
+            const nextX = this.x - 1 + i;
             const nextY = this.y + j;
-            if(this.tetoris.exists(nextX, nextY)) {
+            if (this.tetoris.exists(nextX, nextY)) {
               isCollision = true;
             }
           }
         }
       }
-      if (!isCollision)  {
+      if (!isCollision) {
         this.x--;
         this.draw();
       }
@@ -395,10 +421,10 @@
       let isCollision = false;
       for (let i = 0; i < 4; i++) {
         for (let j = 0; j < 4; j++) {
-          if(this.pattern[j][i]) {
-            const nextX = this.x + 1 + i; 
+          if (this.pattern[j][i]) {
+            const nextX = this.x + 1 + i;
             const nextY = this.y + j;
-            if(this.tetoris.exists(nextX, nextY)) {
+            if (this.tetoris.exists(nextX, nextY)) {
               isCollision = true;
             }
           }
@@ -414,10 +440,10 @@
       let isCollision = false;
       for (let i = 0; i < 4; i++) {
         for (let j = 0; j < 4; j++) {
-          if(this.pattern[j][i]) {
-            const nextX = this.x + i; 
+          if (this.pattern[j][i]) {
+            const nextX = this.x + i;
             const nextY = this.y + 1 + j;
-            if(this.tetoris.exists(nextX, nextY)) {
+            if (this.tetoris.exists(nextX, nextY)) {
               isCollision = true;
             }
           }
@@ -457,7 +483,7 @@
   }
 
   class PlacedBlock {
-    constructor(tetorimino){
+    constructor(tetorimino) {
       this.tetorimino = tetorimino;
       this.graphics = new PIXI.Graphics();
       this.tetorimino.getApp().stage.addChild(this.graphics);
